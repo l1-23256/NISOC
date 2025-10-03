@@ -4,7 +4,7 @@ class NISOC:
         lablelist = {i: {i: 1} for i in self._G.nodes()}
 
         for t in range(self._T):
-            # 根据 NI_FN 排序并优先处理
+            # Prioritise according to NI-FN order
             visitlist = sorted(self._G.nodes(), key=lambda x: -self._ni_fn_values[x])
 
             for visit in visitlist:
@@ -12,6 +12,7 @@ class NISOC:
                 temp_label = {}
                 total = len(self._G[visit])
 
+                # Compute label weights
                 for i in self._G.neighbors(visit):
                     weight = label_weight(self._G, i, visit, self._similarity_matrix, self._node_to_index,
                                           self._ni_fn_values)
@@ -20,11 +21,13 @@ class NISOC:
 
                 temp_count = len(temp_label)
                 temp_label2 = temp_label.copy()
+
+                # If the value of the parameter is less than 1/v, remove the label
                 for key, value in list(temp_label.items()):
                     if value < 1 / self._v:
                         del temp_label[key]
                         temp_count -= 1
-
+                # Update the node's labellist
                 if temp_count == 0:
                     if temp_label2:
                         b = random.sample(list(temp_label2.keys()), 1)
@@ -44,9 +47,9 @@ class NISOC:
                 lablelist[visit] = temp_label
 
         communities = collections.defaultdict(lambda: list())
-        # 扫描lablelist中的记录标签，相同标签的节点加入同一个社区中
+        # Scan the record labels in the list and add nodes with the same label to the same community
         for primary, change in lablelist.items():
             for label in change.keys():
                 communities[label].append(primary)
-        # 返回值是个数据字典，value以集合的形式存在
+        # The return value is a data dictionary, and the value exists as a set
         return communities.values(), lablelist
